@@ -1,7 +1,7 @@
 '''Deep reinforcement learning in gym evironments'''
 import numpy as np
 import gym
-from agent import SYNC_EVERY, Agent
+from agent import Agent
 from utils import plot_info
 
 GAMMA = 0.99
@@ -20,7 +20,8 @@ def main(n_games=5000, env_type='Acrobot-v1'):
     '''
     env = gym.make(env_type)
     agent = Agent(gamma=GAMMA, eps=EPS, n_actions=env.action_space.n, lr=LR, batch_size=BATCH_SIZE,
-                  eps_dec=EPS_DEC, eps_min=EPS_MIN, input_dims=[env.observation_space.shape[0]])
+                  eps_dec=EPS_DEC, eps_min=EPS_MIN, input_dims=[env.observation_space.shape[0]],
+                  sync_every=SYNC_EVERY, mem_size=MAX_MEM_SIZE)
 
     scores, epsilons = [], []
 
