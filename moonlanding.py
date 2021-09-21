@@ -1,25 +1,39 @@
-import gym
+'''Deep reinforcement learning in gym evironments'''
 import numpy as np
-from agent import Agent
-from utils import plotLearning
+import gym
+from agent import SYNC_EVERY, Agent
+from utils import plot_info
 
-def main(n_games=500):
+GAMMA = 0.99
+EPS = 0.99
+LR = 0.00007
+BATCH_SIZE = 64
+EPS_DEC = 0.001
+EPS_MIN = 5e-4
+MAX_MEM_SIZE = 1000000
+SYNC_EVERY = 10000
 
-    env = gym.make('LunarLander-v2')
-    agent = Agent(gamma=0.99, epsilon=1, batch_size=4096, n_actions=4,
-                  eps_end=0.01, input_dims=[8], lr=0.003)
+def main(n_games=5000, env_type='Acrobot-v1'):
+    '''
+    Perform deep reinforcement learning on a
+    given gym environment
+    '''
+    env = gym.make(env_type)
+    agent = Agent(gamma=GAMMA, eps=EPS, n_actions=env.action_space.n, lr=LR, batch_size=BATCH_SIZE,
+                  eps_dec=EPS_DEC, eps_min=EPS_MIN, input_dims=[env.observation_space.shape[0]])
 
-    scores, eps_history = [], []
+    scores, epsilons = [], []
 
     for i in range(n_games):
         score = 0
         done = False
         observation = env.reset()
-        render = True if i % 25 == 0 else False
+        render = i % 500 == 0
 
         while not done:
             if render:
                 env.render()
+
             action = agent.choose_action(observation)
             observation_, reward, done, _ = env.step(action)
             score += reward
@@ -27,18 +41,15 @@ def main(n_games=500):
             agent.learn()
             observation = observation_
 
-        agent.learn(update_network=render)
         env.close()
-
         scores.append(score)
-        eps_history.append(agent.epsilon)
+        epsilons.append(agent.eps)
 
-        avg_score = np.mean(scores[-100:])
+        print(f'episode {i}, score {round(score, 2)} average score {np.mean(scores[-100:])}')
 
-        print(f'episode {i}, score {round(score, 2)} average score {round(avg_score, 2)}')
-
-    x = [i+1 for i in range(n_games)]
-    plotLearning(x, scores, eps_history, filename='lunar_lander_2020,png')
+    agent.save_models()
+    x = [i for i in range(n_games)]
+    plot_info(x, scores, epsilons, filename=env_type)
 
 if __name__ == "__main__":
 
