@@ -5,15 +5,15 @@ from agent import Agent
 from utils import plot_info
 
 GAMMA = 0.99
-EPS = 0.99
-LR = 0.00007
+EPS = 1.0
+LR = 5e-4
 BATCH_SIZE = 64
-EPS_DEC = 0.001
+EPS_DEC = 1e-3
 EPS_MIN = 5e-4
 MAX_MEM_SIZE = 1000000
-SYNC_EVERY = 10000
+SYNC_EVERY = 100
 
-def main(n_games=5000, env_type='Acrobot-v1'):
+def main(n_games=500, env_type='BipedalWalker-v3'):
     '''
     Perform deep reinforcement learning on a
     given gym environment
@@ -29,7 +29,7 @@ def main(n_games=5000, env_type='Acrobot-v1'):
         score = 0
         done = False
         observation = env.reset()
-        render = i % 500 == 0
+        render = i % 50 == 0
 
         while not done:
             if render:
@@ -47,10 +47,11 @@ def main(n_games=5000, env_type='Acrobot-v1'):
         epsilons.append(agent.eps)
 
         print(f'episode {i}, score {round(score, 2)} average score {np.mean(scores[-100:])}')
+        print(f'eps {round(agent.eps, 3)}')
 
     agent.save_models()
     x = [i for i in range(n_games)]
-    plot_info(x, scores, epsilons, filename=env_type)
+    plot_info(x, scores, epsilons, filename=f'images/{env_type}')
 
 if __name__ == "__main__":
 

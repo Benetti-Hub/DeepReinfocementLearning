@@ -3,12 +3,12 @@ import numpy as np
 import torch as T
 
 from replaybuffer import ReplayBuffer
-from deepqnet import DeepQnet
+from neuralnets import DuelQnet
 
 class Agent():
 
-    def __init__(self, gamma, eps, n_actions, lr, batch_size, eps_dec, eps_min,
-                 input_dims, sync_every, mem_size, save_path='models') -> None:
+    def __init__(self, gamma, eps, lr, n_actions, input_dims, mem_size, batch_size,
+                 eps_min=0.01, eps_dec=5e-7, sync_every=1000, save_path='models') -> None:
 
         self.set_rl(eps, gamma, eps_dec, eps_min, n_actions)
         self.set_dl(batch_size, n_actions, lr, input_dims, save_path, sync_every)
@@ -30,14 +30,14 @@ class Agent():
         self.learn_step_counter = 0
         self.batch_size = batch_size
 
-        self.Q_eval = DeepQnet(n_actions, lr, *input_dims, fc1_dims=256, fc2_dims=256)
-        self.Q_next = DeepQnet(n_actions, lr, *input_dims, fc1_dims=256, fc2_dims=256)
+        self.Q_eval = DuelQnet(n_actions, lr, *input_dims)
+        self.Q_next = DuelQnet(n_actions, lr, *input_dims)
         self.Q_next.load_state_dict(self.Q_eval.state_dict())
 
         self.sync_every = sync_every
 
         self.save_path = save_path
-        self.load_models()
+        #self.load_models()
 
     def store_transition(self, state, action, reward, state_, done) -> None:
         self.state_mem.store_transition(state, action, reward, state_, done)
@@ -45,7 +45,8 @@ class Agent():
     def choose_action(self, observation) -> int:
         if np.random.random() > self.eps:
             state  = T.tensor([observation]).to(self.Q_eval.device)
-            action = T.argmax(self.Q_eval.forward(state)).item()
+            _, advantage = state = self.Q_eval.forward(state)
+            action = T.argmax(advantage).item()
         else:
             action = np.random.choice(self.action_space)
 
@@ -56,7 +57,7 @@ class Agent():
             self.Q_next.load_state_dict(self.Q_eval.state_dict())
 
     def decrement_epsilon(self) -> None:
-        self.eps = self.eps * (1 - self.eps_dec) \
+        self.eps = self.eps - self.eps_dec \
                     if self.eps > self.eps_min else self.eps_min
 
     def learn(self) -> None:
@@ -76,10 +77,15 @@ class Agent():
         action = T.tensor(action, dtype=T.int64).to(self.Q_eval.device)
         reward = T.tensor(reward, dtype=T.float32).to(self.Q_next.device)
 
-        q_eval = self.Q_eval.forward(state)[T.arange(self.batch_size), action]
-        with T.no_grad():
-            q_next = T.max(self.Q_next.forward(state_), dim=1)[0]
-            q_target = reward + self.gamma*q_next*(1-done)
+
+        V_s, A_s = self.Q_eval.forward(state)
+        V_s_, A_s_ = self.Q_next.forward(state_)
+
+        q_eval = T.add(V_s, (A_s-A_s.mean(dim=1, keepdim=True))).gather(1,
+                       action.unsqueeze(-1)).squeeze(-1)
+
+        q_next = T.add(V_s_, (A_s_-A_s_.mean(dim=1, keepdim=True)))
+        q_target = reward + self.gamma*T.max(q_next, dim=1)[0].detach()*(1-done)
 
         loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
         loss.backward()
