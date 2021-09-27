@@ -29,13 +29,20 @@ class DeepQnet(nn.Module):
         return value
 
 class DuelQnet(nn.Module):
+
+    '''
+    This particular neural networks architecture
+    introduces the concept of advantage to achieve
+    a more stable training
+    '''
+
     def __init__(self, n_actions, lr, input_dims):
         super().__init__()
-        self.fc1 = nn.Linear(input_dims, 128)
-        self.fc2 = nn.Linear(128, 128)
+        self.fc1 = nn.Linear(input_dims, 256)
+        self.fc2 = nn.Linear(256, 256)
 
-        self.A = nn.Linear(128, 1)
-        self.V = nn.Linear(128, n_actions)
+        self.A = nn.Linear(256, 1)
+        self.V = nn.Linear(256, n_actions)
 
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)

@@ -1,12 +1,19 @@
+'''Replay buffer class to store the transition in memory'''
+
 import numpy as np
 
 class ReplayBuffer():
+
+    '''
+    The base buffer class, it can store and sample
+    episodes to perform the training of the neural network
+    '''
 
     def __init__(self, max_size, input_dims):
         self.mem_size = max_size
         self.mem_cntr = 0
 
-        self.state_memory = np.zeros((self.mem_size, input_dims), 
+        self.state_memory = np.zeros((self.mem_size, input_dims),
                                     dtype=np.float32)
         self.new_state_memory = np.zeros((self.mem_size, input_dims),
                                 dtype=np.float32)
@@ -16,7 +23,7 @@ class ReplayBuffer():
 
     def __len__(self):
         return min(self.mem_cntr, self.mem_size)
-    
+
     def store_transition(self, state, action, reward, state_, done):
         index = self.mem_cntr % self.mem_size
         self.state_memory[index] = state
