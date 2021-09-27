@@ -54,7 +54,7 @@ def main(n_games=500, env_type='LunarLander-v2'):
     x = [i for i in range(n_games)]
     plot_info(x, scores, filename=f'images/{env_type}')
 
-def plot_info(x, scores, filename, window=20):
+def plot_info(x, scores, filename, window=25):
 
     '''
     Utility function to visualize the results,
@@ -64,16 +64,15 @@ def plot_info(x, scores, filename, window=20):
 
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 4))
 
-    ax.plot(x, scores, 'bo', label='single episode')
+    ax.plot(x, scores, 'bo', markersize=1.5, label='single episode')
 
     fun = lambda s, w: np.convolve(s, np.ones(w), 'valid')/w
     rolling = fun(scores, window)
-    ax.plot(x[window-1:], rolling, label='rolling mean')
+    ax.plot(x[window-1:], rolling, 'r-', label='rolling mean')
 
     ax.set_ylabel('Score')
     ax.set_xlabel('Episode')
     ax.legend()
-
     ax.grid()
 
     fig.savefig(filename)
