@@ -13,7 +13,7 @@ EPS_MIN = 5e-4
 MAX_MEM_SIZE = 1000000
 SYNC_EVERY = 100
 
-def main(n_games=500, env_type='BipedalWalker-v3'):
+def main(n_games=500, env_type='LunarLander-v2'):
     '''
     Perform deep reinforcement learning on a
     given gym environment
