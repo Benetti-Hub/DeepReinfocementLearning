@@ -1,6 +1,6 @@
 # Deep Reinfocement Learning
 
-The repository shows how to solve a reinforcement learning with function approximation (achieved using neural networks). The target network is used to estimate the next set of Q-values for a specific action in a continuous environment. The online network is instead used for the prediction of the instantaneous reward and is updated using the replay buffer each time the agent takes an action.
+The repository shows how to solve a reinforcement learning problem with function approximation (achieved using neural networks). The target network is used to estimate the next set of Q-values for a specific action in a continuous environment. The online network is instead used for the prediction of the instantaneous reward and is updated using the replay buffer each time the agent takes an action.
 
 Install the required packages using
 
